@@ -89,3 +89,33 @@ function displayQueryResult(result: any): void {
     // Svelteのストアにデータをセット
     queryResult.set(rows);
 }
+
+export async function importCSV(file: File): Promise<void> {
+    if (!db || db == null) {
+        console.error("DuckDBが初期化されていません。");
+        return;
+    }
+    const reader = new FileReader();
+
+    reader.onload = async function () {
+        const csvData = reader.result as string;
+        const conn = await db.connect();
+
+        try {
+            // CSVデータを仮想ファイルとして登録
+            await db.registerFileText("uploaded_csv", csvData);
+
+            // 登録されたCSVデータをテーブルにインポート
+            await conn.query(
+                `CREATE TABLE uploaded_csv AS SELECT * FROM read_csv_auto('uploaded_csv');`,
+            );
+            console.log("CSVファイルがインポートされました");
+        } catch (error) {
+            console.error("CSVインポート中にエラーが発生しました:", error);
+        } finally {
+            await conn.close();
+        }
+    };
+
+    reader.readAsText(file);
+}
