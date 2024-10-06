@@ -36,6 +36,23 @@ export async function initializeDuckDB(): Promise<void> {
     }
 }
 
+// ユーザーが入力したSQLクエリを実行する
+export async function runUserQuery(query: string): Promise<void> {
+    if (!db) {
+        console.error("DuckDBが初期化されていません。");
+        return;
+    }
+    const conn = await db.connect();
+    try {
+        const result = await conn.query(query);
+        displayQueryResult(result);
+    } catch (error) {
+        console.error("クエリの実行中にエラーが発生しました:", error);
+    } finally {
+        await conn.close();
+    }
+}
+
 // サンプルクエリの実行
 export async function runSampleQuery(): Promise<void> {
     if (!db) {
