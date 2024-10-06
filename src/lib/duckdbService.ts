@@ -63,6 +63,7 @@ export async function runSampleQuery(): Promise<void> {
     await conn.query(`CREATE TABLE test (id INT, name VARCHAR);`);
     await conn.query(`INSERT INTO test VALUES (1, 'Alice'), (2, 'Bob');`);
     const result = await conn.query(`SELECT * FROM test;`);
+    console.log("q result", result)
 
     displayQueryResult(result);
     await conn.close();
@@ -70,6 +71,8 @@ export async function runSampleQuery(): Promise<void> {
 
 // クエリ結果の表示
 function displayQueryResult(result: any): void {
+    console.log('Query Result:', result);  // ログで結果を確認
+
     const schema = result.schema.fields.map((field: any) => field.name); // カラム名を取得
     const rows: any[] = [];
 
@@ -84,8 +87,23 @@ function displayQueryResult(result: any): void {
             // 各カラムのデータを行ごとに抽出
             for (let colIndex = 0; colIndex < data.length; colIndex++) {
                 const columnName = schema[colIndex];
+                const columnType = data[colIndex].type; // カラムの型を取得
                 const columnValues = data[colIndex].values;
-                row[columnName] = columnValues[i];
+
+                // 型判定を明確化して、各カラムを処理
+                if (columnType && columnType.constructor && columnType.constructor.name === 'Utf8') {
+                    // 文字列（UTF-8）の場合、文字列に変換
+                    const offsets = data[colIndex].valueOffsets;
+                    const valueArray = columnValues.slice(offsets[i], offsets[i + 1]);
+                    row[columnName] = String.fromCharCode(...valueArray);
+                } else if (columnType && columnType.constructor && columnType.constructor.name === 'Int') {
+                    // 数値（Int）の場合はそのまま代入
+                    row[columnName] = columnValues[i];
+                } else {
+                    // その他の型も処理できるようにデフォルトの代入
+                    row[columnName] = columnValues[i];
+                    console.warn(`Unhandled column type: ${columnType.constructor.name}`);
+                }
             }
 
             rows.push(row);
@@ -95,6 +113,7 @@ function displayQueryResult(result: any): void {
     // Svelteのストアにデータをセット
     queryResult.set({ schema, rows });
 }
+
 
 export async function importCSV(file: File): Promise<void> {
     const reader = new FileReader();
