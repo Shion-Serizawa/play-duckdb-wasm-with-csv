@@ -2,6 +2,7 @@
     import { onMount } from 'svelte';
     import MonacoEditor from '$lib/MonacoEditor.svelte'; // MonacoEditorをインポート
     import { initializeDuckDB, runUserQuery, queryResult, importCSV } from '$lib/duckdbService'; // DuckDBサービスをインポート
+    import './+page.svelte.css';  // CSSファイルをインポート
   
     let editorInstance;
     let queryResults = { schema: [], rows: [] }; // 初期値を空の配列に設定
