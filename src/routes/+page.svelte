@@ -27,7 +27,7 @@
     }
   </script>
   
-  <h1>DuckDBクエリエディタ</h1>
+  <h1>DuckDB-wasmで遊ぼう！</h1>
   
   <MonacoEditor bind:this={editorInstance} />
   <!-- Monaco Editor コンポーネントにバインド -->
