@@ -70,38 +70,48 @@ export async function runSampleQuery(): Promise<void> {
 
 // クエリ結果の表示
 function displayQueryResult(result: any): void {
-    const idValues = result.batches[0].data.children[0].values;
-    const nameValues = result.batches[0].data.children[1].values;
-    const offsets = result.batches[0].data.children[1].valueOffsets;
+    const schema = result.schema.fields.map((field: any) => field.name); // カラム名を取得
+    const rows: any[] = [];
 
-    const rows: QueryResultRow[] = [];
+    // データのバッチを処理
+    for (const batch of result.batches) {
+        const data = batch.data.children;
+        const rowCount = data[0].length; // 行数
 
-    for (let i = 0; i < idValues.length; i++) {
-        const id = idValues[i];
+        for (let i = 0; i < rowCount; i++) {
+            const row: any = {};
 
-        // 名前のバイト列を文字列に変換
-        const nameArray = nameValues.slice(offsets[i], offsets[i + 1]);
-        const name = String.fromCharCode(...nameArray);
+            // 各カラムのデータを行ごとに抽出
+            for (let colIndex = 0; colIndex < data.length; colIndex++) {
+                const columnName = schema[colIndex];
+                const columnValues = data[colIndex].values;
+                row[columnName] = columnValues[i];
+            }
 
-        rows.push({ id, name });
+            rows.push(row);
+        }
     }
 
     // Svelteのストアにデータをセット
-    queryResult.set(rows);
+    queryResult.set({ schema, rows });
 }
 
 export async function importCSV(file: File): Promise<void> {
-    if (!db || db == null) {
-        console.error("DuckDBが初期化されていません。");
-        return;
-    }
     const reader = new FileReader();
 
     reader.onload = async function () {
+        if (!db) {
+            console.error("DuckDBが初期化されていません。");
+            return;
+        }
+
         const csvData = reader.result as string;
         const conn = await db.connect();
 
         try {
+            // 既存のテーブルを削除
+            await conn.query(`DROP TABLE IF EXISTS uploaded_csv;`);
+            
             // CSVデータを仮想ファイルとして登録
             await db.registerFileText("uploaded_csv", csvData);
 

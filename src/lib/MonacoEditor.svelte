@@ -31,4 +31,4 @@
 	});
 </script>
 
-<div bind:this={editorContainer} style="width: 800px; height: 600px;"></div>
+<div bind:this={editorContainer} style="width: 800px; height: 300px;"></div>
