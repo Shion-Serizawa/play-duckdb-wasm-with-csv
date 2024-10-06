@@ -1,3 +1,4 @@
+- svelte&monaco&duck-db-wasmで、Web簡潔のduck-db環境を作ってみた。
 # create-svelte
 
 Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/main/packages/create-svelte).
